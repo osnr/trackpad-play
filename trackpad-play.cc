@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "udp-flaschen-taschen.h"
+
 typedef struct { float x,y; } mtPoint;
 typedef struct { mtPoint pos,vel; } mtReadout;
 
@@ -21,10 +23,11 @@ typedef struct {
 typedef void *MTDeviceRef;
 typedef int (*MTContactCallbackFunction)(int,Finger*,int,double,int);
 
-MTDeviceRef MTDeviceCreateDefault();
-void MTRegisterContactFrameCallback(MTDeviceRef, MTContactCallbackFunction);
-void MTDeviceStart(MTDeviceRef, int); // thanks comex
-
+extern "C" {
+    MTDeviceRef MTDeviceCreateDefault();
+    void MTRegisterContactFrameCallback(MTDeviceRef, MTContactCallbackFunction);
+    void MTDeviceStart(MTDeviceRef, int); // thanks comex
+}
 
 int callback(int device, Finger *data, int nFingers, double timestamp, int frame) {
   for (int i=0; i<nFingers; i++) {
