@@ -86,41 +86,44 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
         //        f->identifier, f->state, f->foo3, f->foo4,
         //        f->size, f->unk2);
 
-        // plotTouch(f->normalized.pos.x, f->normalized.pos.y);
         drawEllipse(((f->normalized.pos.x) * SUPER_WIDTH), ((1.0f - f->normalized.pos.y) * SUPER_HEIGHT),
                     (f->majorAxis * 2.5), (f->minorAxis * 2.5), f->angle);
-
-        // const Color red(255, f->angle * 90 / atan2(1,0), 0);
-        // canvas->SetPixel(f->normalized.pos.x * DISPLAY_WIDTH, (1.0f - f->normalized.pos.y) * DISPLAY_HEIGHT, red);
-        // canvas->Send();
     }
     // printf("\n");
 
-    memset(small, 0, DISPLAY_WIDTH*DISPLAY_HEIGHT*sizeof(int));
+    // Downsample (super -> display):
     float xScale = (float) DISPLAY_WIDTH / (float) SUPER_WIDTH;
     float yScale = (float) DISPLAY_HEIGHT / (float) SUPER_HEIGHT;
+
+    int rSum[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
+    int gSum[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
+    int bSum[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
+    int binSize[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {0};
     for (int x = 0; x < SUPER_WIDTH; x++) {
         for (int y = 0; y < SUPER_HEIGHT; y++) {
-            if (super[y][x] != 0) {
-                small[(int) (y * yScale)][(int) (x * xScale)] += 1;
-            }
+            int dispX = (int) (x * xScale);
+            int dispY = (int) (y * yScale);
+
+            unsigned int color = super[y][x];
+            rSum[dispY][dispX] += (color & 0xFF0000) >> 16;
+            gSum[dispY][dispX] += (color & 0x00FF00) >> 8;
+            bSum[dispY][dispX] += (color & 0x0000FF);
+            binSize[dispY][dispX]++;
         }
     }
 
     canvas->Clear();
 
-    float binSize = (float) (SUPER_WIDTH * SUPER_HEIGHT) / (float) (DISPLAY_WIDTH * DISPLAY_HEIGHT);
+    memset(small, 0, DISPLAY_WIDTH*DISPLAY_HEIGHT*sizeof(int));
     for (int y = 0; y < DISPLAY_HEIGHT; y++) {
         for (int x = 0; x < DISPLAY_WIDTH; x++) {
-            // if (small[y][x] == 0) printf("   ");
-            // else printf("%02d ", small[y][x]);
+            int bs = binSize[y][x];
+            int r = rSum[y][x] / bs;
+            int g = gSum[y][x] / bs;
+            int b = bSum[y][x] / bs;
+            small[y][x] = MFB_RGB(r, g, b);
 
-            float level = fmin((float) small[y][x] / binSize, 1.0f); // out of 1
-
-            int value = 255 * level;
-            small[y][x] = MFB_RGB(value, value, value);
-
-            const Color color(value, value, value);
+            const Color color(r, g, b);
             canvas->SetPixel(x, y, color);
         }
         // printf("\n");
