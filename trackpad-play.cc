@@ -42,11 +42,11 @@ UDPFlaschenTaschen *canvas;
 
 #define SUPER_WIDTH 400
 #define SUPER_HEIGHT 400
-int super[SUPER_WIDTH][SUPER_HEIGHT];
+int super[SUPER_HEIGHT][SUPER_WIDTH];
 struct Window *superWindow;
 
 struct Window *smallWindow;
-int small[DISPLAY_WIDTH][DISPLAY_HEIGHT];
+int small[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 
 int isInsideEllipse(float x0, float y0, float a, float b, float angle, float x, float y) {
     float c = cos(angle) * (x - x0) + sin(angle) * (y - y0);
@@ -60,7 +60,7 @@ void drawEllipse(float x0, float y0, float a, float b, float angle) {
             if (x >= 0 && x < SUPER_WIDTH && y >= 0 && y < SUPER_HEIGHT &&
                 isInsideEllipse(x0, y0, a, b, angle, x, y)) {
 
-                super[x][y] = MFB_RGB(255, 0, 0);
+                super[y][x] = MFB_RGB(255, 0, 0);
             }
         }
     }
@@ -101,8 +101,8 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
     float yScale = (float) DISPLAY_HEIGHT / (float) SUPER_HEIGHT;
     for (int x = 0; x < SUPER_WIDTH; x++) {
         for (int y = 0; y < SUPER_HEIGHT; y++) {
-            if (super[x][y] != 0) {
-                small[(int) (x * xScale)][(int) (y * yScale)] += 1;
+            if (super[y][x] != 0) {
+                small[(int) (y * yScale)][(int) (x * xScale)] += 1;
             }
         }
     }
@@ -112,13 +112,12 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
     float binSize = (float) (SUPER_WIDTH * SUPER_HEIGHT) / (float) (DISPLAY_WIDTH * DISPLAY_HEIGHT);
     for (int y = 0; y < DISPLAY_HEIGHT; y++) {
         for (int x = 0; x < DISPLAY_WIDTH; x++) {
-            float level = (float) small[x][y] / binSize; // out of 1
+            float level = (float) small[y][x] / binSize; // out of 1
 
             int value = 255 * level;
-            small[x][y] = MFB_RGB(value, value, value);
+            small[y][x] = MFB_RGB(value, value, value);
 
             const Color color(value, value, value);
-            
             canvas->SetPixel(x, y, color);
         }
         // printf("\n");
