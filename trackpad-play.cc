@@ -38,8 +38,12 @@ extern "C" {
 
 UDPFlaschenTaschen *canvas;
 
-int highres[500][500];
-struct Window *window;
+#define SUPER_WIDTH 400
+#define SUPER_HEIGHT 400
+int super[SUPER_WIDTH][SUPER_HEIGHT];
+struct Window *superWindow;
+
+struct Window *small;
 
 int isInsideEllipse(float x0, float y0, float a, float b, float angle, float x, float y) {
     float c = cos(angle) * (x - x0) + sin(angle) * (y - y0);
@@ -50,24 +54,17 @@ void drawEllipse(float x0, float y0, float a, float b, float angle) {
     const float maxR = fmax(a, b) * 1.414;
     for (int x = (int) (x0 - maxR); x < (int) (x0 + maxR); x++) {
         for (int y = (int) (y0 - maxR); y < (int) (y0 + maxR); y++) {
-            if (x >= 0 && x < 500 && y >= 0 && y < 500 &&
+            if (x >= 0 && x < SUPER_WIDTH && y >= 0 && y < SUPER_HEIGHT &&
                 isInsideEllipse(x0, y0, a, b, angle, x, y)) {
 
-                highres[x][y] = MFB_RGB(255, 0, 0);
+                super[x][y] = MFB_RGB(255, 0, 0);
             }
         }
     }
 }
 
-void plotTouch(float x, float y) {
-    int scaledX = (int)(x * 500);
-    int scaledY = (int)(y * 500);
-
-    highres[scaledX][scaledY] = MFB_RGB(255, 0, 0);
-}
-
 int callback(int device, Finger *data, int nFingers, double timestamp, int frame) {
-    memset(highres, 0, 500*500*sizeof(int));
+    memset(super, 0, SUPER_WIDTH*SUPER_HEIGHT*sizeof(int));
 
     canvas->Clear();
     for (int i=0; i<nFingers; i++) {
@@ -88,8 +85,8 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
         //        f->size, f->unk2);
 
         // plotTouch(f->normalized.pos.x, f->normalized.pos.y);
-        drawEllipse((f->normalized.pos.x * 500), (f->normalized.pos.y * 500),
-                    (f->majorAxis * 3), (f->minorAxis * 3), f->angle);
+        drawEllipse((f->normalized.pos.x * SUPER_WIDTH), (f->normalized.pos.y * SUPER_HEIGHT),
+                    (f->majorAxis * 2.5), (f->minorAxis * 2.5), f->angle);
 
         // const Color red(255, f->angle * 90 / atan2(1,0), 0);
         // canvas->SetPixel(f->normalized.pos.x * DISPLAY_WIDTH, (1.0f - f->normalized.pos.y) * DISPLAY_HEIGHT, red);
@@ -97,11 +94,19 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
     }
     printf("\n");
 
+    for (int x = 0; x < SUPER_WIDTH; x++) {
+        for (int y = 0; y < SUPER_HEIGHT; y++) {
+            
+        }
+    }
+
     return 0;
 }
 
 int main() {
-    window = mfb_open_ex("hi", 500, 500, WF_RESIZABLE);
+    superWindow = mfb_open_ex("hi", SUPER_WIDTH, SUPER_HEIGHT, WF_RESIZABLE);
+
+    small = mfb_open_ex("small", 8, 8, WF_RESIZABLE);
 
     const int socket = OpenFlaschenTaschenSocket("10.20.4.57:1337");
     canvas = new UDPFlaschenTaschen(socket, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -112,7 +117,7 @@ int main() {
     printf("Ctrl-C to abort\n");
 
     for (;;) {
-        mfb_update(window, highres);
+        mfb_update(superWindow, super);
     }
 
     return 0;
