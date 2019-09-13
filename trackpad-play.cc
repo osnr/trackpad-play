@@ -112,7 +112,10 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
     float binSize = (float) (SUPER_WIDTH * SUPER_HEIGHT) / (float) (DISPLAY_WIDTH * DISPLAY_HEIGHT);
     for (int y = 0; y < DISPLAY_HEIGHT; y++) {
         for (int x = 0; x < DISPLAY_WIDTH; x++) {
-            float level = (float) small[y][x] / binSize; // out of 1
+            // if (small[y][x] == 0) printf("   ");
+            // else printf("%02d ", small[y][x]);
+
+            float level = fmin((float) small[y][x] / binSize, 1.0f); // out of 1
 
             int value = 255 * level;
             small[y][x] = MFB_RGB(value, value, value);
