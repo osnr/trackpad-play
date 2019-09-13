@@ -47,8 +47,9 @@ int isInsideEllipse(float x0, float y0, float a, float b, float angle, float x, 
     return (c * c) / (a * a) + (d * d) / (b * b) <= 1;
 }
 void drawEllipse(float x0, float y0, float a, float b, float angle) {
-    for (int x = (int) (x0 - fmax(a, b)); x < (int) (x0 + fmax(a, b)); x++) {
-        for (int y = (int) (y0 - fmax(a, b)); y < (int) (y0 + fmax(a, b)); y++) {
+    const float maxR = fmax(a, b) * 1.414;
+    for (int x = (int) (x0 - maxR); x < (int) (x0 + maxR); x++) {
+        for (int y = (int) (y0 - maxR); y < (int) (y0 + maxR); y++) {
             if (x >= 0 && x < 500 && y >= 0 && y < 500 &&
                 isInsideEllipse(x0, y0, a, b, angle, x, y)) {
 
@@ -88,7 +89,7 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
 
         // plotTouch(f->normalized.pos.x, f->normalized.pos.y);
         drawEllipse((f->normalized.pos.x * 500), (f->normalized.pos.y * 500),
-                    f->majorAxis, f->minorAxis, f->angle);
+                    (f->majorAxis * 3), (f->minorAxis * 3), f->angle);
 
         // const Color red(255, f->angle * 90 / atan2(1,0), 0);
         // canvas->SetPixel(f->normalized.pos.x * DISPLAY_WIDTH, (1.0f - f->normalized.pos.y) * DISPLAY_HEIGHT, red);

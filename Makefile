@@ -7,7 +7,7 @@ MINIFB_DIR=/Users/osnr/aux/minifb
 MINIFB_LIBS=-framework Cocoa -framework QuartzCore -framework Metal -framework MetalKit -I$(MINIFB_DIR)/include -L$(MINIFB_DIR)/build -lminifb
 
 trackpad-play: trackpad-play.cc
-	clang++ -o trackpad-play $(MULTITOUCH_LIBS) $(FLASCHEN_TASCHEN_API_LIBS) $(MINIFB_LIBS) $^
+	clang++ -O3 -o trackpad-play $(MULTITOUCH_LIBS) $(FLASCHEN_TASCHEN_API_LIBS) $(MINIFB_LIBS) $^
 
 clean:
 	rm trackpad-play
