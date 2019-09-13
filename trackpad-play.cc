@@ -43,7 +43,8 @@ UDPFlaschenTaschen *canvas;
 int super[SUPER_WIDTH][SUPER_HEIGHT];
 struct Window *superWindow;
 
-struct Window *small;
+struct Window *smallWindow;
+int small[DISPLAY_WIDTH][DISPLAY_HEIGHT];
 
 int isInsideEllipse(float x0, float y0, float a, float b, float angle, float x, float y) {
     float c = cos(angle) * (x - x0) + sin(angle) * (y - y0);
@@ -94,11 +95,21 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
     }
     printf("\n");
 
+    float xScale = (float) DISPLAY_WIDTH / (float) SUPER_WIDTH;
+    float yScale = (float) DISPLAY_HEIGHT / (float) SUPER_HEIGHT;
     for (int x = 0; x < SUPER_WIDTH; x++) {
         for (int y = 0; y < SUPER_HEIGHT; y++) {
-            
+            if (super[x][y] != 0) {
+                small[(int) (x * xScale)][(int) (y * yScale)] += 1;
+            }
         }
     }
+    // for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+    //     for (int x = 0; x < DISPLAY_WIDTH; x++) {
+    //         printf("%02d ", small[x][y]);
+    //     }
+    //     printf("\n");
+    // }
 
     return 0;
 }
@@ -106,7 +117,7 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
 int main() {
     superWindow = mfb_open_ex("hi", SUPER_WIDTH, SUPER_HEIGHT, WF_RESIZABLE);
 
-    small = mfb_open_ex("small", 8, 8, WF_RESIZABLE);
+    smallWindow = mfb_open_ex("small", DISPLAY_WIDTH, DISPLAY_HEIGHT, WF_RESIZABLE);
 
     const int socket = OpenFlaschenTaschenSocket("10.20.4.57:1337");
     canvas = new UDPFlaschenTaschen(socket, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -118,6 +129,7 @@ int main() {
 
     for (;;) {
         mfb_update(superWindow, super);
+        mfb_update(smallWindow, small);
     }
 
     return 0;
