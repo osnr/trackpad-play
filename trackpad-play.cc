@@ -33,8 +33,10 @@ extern "C" {
     void MTDeviceStart(MTDeviceRef, int); // thanks comex
 }
 
-#define DISPLAY_WIDTH 8
-#define DISPLAY_HEIGHT 8
+// #define DISPLAY_WIDTH 8
+// #define DISPLAY_HEIGHT 8
+#define DISPLAY_WIDTH 45
+#define DISPLAY_HEIGHT 40
 
 UDPFlaschenTaschen *canvas;
 
@@ -67,7 +69,6 @@ void drawEllipse(float x0, float y0, float a, float b, float angle) {
 int callback(int device, Finger *data, int nFingers, double timestamp, int frame) {
     memset(super, 0, SUPER_WIDTH*SUPER_HEIGHT*sizeof(int));
 
-    canvas->Clear();
     for (int i=0; i<nFingers; i++) {
         Finger *f = &data[i];
     
@@ -86,14 +87,14 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
         //        f->size, f->unk2);
 
         // plotTouch(f->normalized.pos.x, f->normalized.pos.y);
-        drawEllipse((f->normalized.pos.x * SUPER_WIDTH), (f->normalized.pos.y * SUPER_HEIGHT),
+        drawEllipse(((f->normalized.pos.x) * SUPER_WIDTH), ((1.0f - f->normalized.pos.y) * SUPER_HEIGHT),
                     (f->majorAxis * 2.5), (f->minorAxis * 2.5), f->angle);
 
         // const Color red(255, f->angle * 90 / atan2(1,0), 0);
         // canvas->SetPixel(f->normalized.pos.x * DISPLAY_WIDTH, (1.0f - f->normalized.pos.y) * DISPLAY_HEIGHT, red);
         // canvas->Send();
     }
-    printf("\n");
+    // printf("\n");
 
     memset(small, 0, DISPLAY_WIDTH*DISPLAY_HEIGHT*sizeof(int));
     float xScale = (float) DISPLAY_WIDTH / (float) SUPER_WIDTH;
@@ -105,15 +106,24 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
             }
         }
     }
+
+    canvas->Clear();
+
     float binSize = (float) (SUPER_WIDTH * SUPER_HEIGHT) / (float) (DISPLAY_WIDTH * DISPLAY_HEIGHT);
     for (int y = 0; y < DISPLAY_HEIGHT; y++) {
         for (int x = 0; x < DISPLAY_WIDTH; x++) {
-            float level = (float) small[x][y] / binSize;
+            float level = (float) small[x][y] / binSize; // out of 1
+
             int value = 255 * level;
             small[x][y] = MFB_RGB(value, value, value);
+
+            const Color color(value, value, value);
+            
+            canvas->SetPixel(x, y, color);
         }
         // printf("\n");
     }
+    canvas->Send();
 
     return 0;
 }
@@ -123,8 +133,10 @@ int main() {
 
     smallWindow = mfb_open_ex("small", DISPLAY_WIDTH, DISPLAY_HEIGHT, WF_RESIZABLE);
 
-    const int socket = OpenFlaschenTaschenSocket("10.20.4.57:1337");
+    // const int socket = OpenFlaschenTaschenSocket("10.20.4.57:1337");
+    const int socket = OpenFlaschenTaschenSocket("ft.noise:1337");
     canvas = new UDPFlaschenTaschen(socket, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    canvas->SetOffset(0, 0, 10);
 
     MTDeviceRef dev = MTDeviceCreateDefault();
     MTRegisterContactFrameCallback(dev, callback);
