@@ -41,6 +41,23 @@ UDPFlaschenTaschen *canvas;
 int highres[500][500];
 struct Window *window;
 
+int isInsideEllipse(float x0, float y0, float a, float b, float angle, float x, float y) {
+    float c = cos(angle) * (x - x0) + sin(angle) * (y - y0);
+    float d = sin(angle) * (x - x0) - cos(angle) * (y - y0);
+    return (c * c) / (a * a) + (d * d) / (b * b) <= 1;
+}
+void drawEllipse(float x0, float y0, float a, float b, float angle) {
+    for (int x = (int) (x0 - fmax(a, b)); x < (int) (x0 + fmax(a, b)); x++) {
+        for (int y = (int) (y0 - fmax(a, b)); y < (int) (y0 + fmax(a, b)); y++) {
+            if (x >= 0 && x < 500 && y >= 0 && y < 500 &&
+                isInsideEllipse(x0, y0, a, b, angle, x, y)) {
+
+                highres[x][y] = MFB_RGB(255, 0, 0);
+            }
+        }
+    }
+}
+
 void plotTouch(float x, float y) {
     int scaledX = (int)(x * 500);
     int scaledY = (int)(y * 500);
@@ -69,7 +86,9 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
         //        f->identifier, f->state, f->foo3, f->foo4,
         //        f->size, f->unk2);
 
-        plotTouch(f->normalized.pos.x, f->normalized.pos.y);
+        // plotTouch(f->normalized.pos.x, f->normalized.pos.y);
+        drawEllipse((f->normalized.pos.x * 500), (f->normalized.pos.y * 500),
+                    f->majorAxis, f->minorAxis, f->angle);
 
         // const Color red(255, f->angle * 90 / atan2(1,0), 0);
         // canvas->SetPixel(f->normalized.pos.x * DISPLAY_WIDTH, (1.0f - f->normalized.pos.y) * DISPLAY_HEIGHT, red);
