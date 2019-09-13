@@ -4,6 +4,10 @@
 
 #include "udp-flaschen-taschen.h"
 
+extern "C" {
+#include "MiniFB.h"
+}
+
 typedef struct { float x,y; } mtPoint;
 typedef struct { mtPoint pos,vel; } mtReadout;
 
@@ -34,7 +38,19 @@ extern "C" {
 
 UDPFlaschenTaschen *canvas;
 
+int highres[500][500];
+struct Window *window;
+
+void plotTouch(float x, float y) {
+    int scaledX = (int)(x * 500);
+    int scaledY = (int)(y * 500);
+
+    highres[scaledX][scaledY] = MFB_RGB(255, 0, 0);
+}
+
 int callback(int device, Finger *data, int nFingers, double timestamp, int frame) {
+    memset(highres, 0, 500*500);
+
     canvas->Clear();
     for (int i=0; i<nFingers; i++) {
         Finger *f = &data[i];
@@ -53,15 +69,20 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
                f->identifier, f->state, f->foo3, f->foo4,
                f->size, f->unk2);
 
-        const Color red(255, f->angle * 90 / atan2(1,0), 0);
-        canvas->SetPixel(f->normalized.pos.x * DISPLAY_WIDTH, (1.0f - f->normalized.pos.y) * DISPLAY_HEIGHT, red);
-        canvas->Send();
+        plotTouch(f->normalized.pos.x, f->normalized.pos.y);
+
+        // const Color red(255, f->angle * 90 / atan2(1,0), 0);
+        // canvas->SetPixel(f->normalized.pos.x * DISPLAY_WIDTH, (1.0f - f->normalized.pos.y) * DISPLAY_HEIGHT, red);
+        // canvas->Send();
     }
     printf("\n");
+
     return 0;
 }
 
 int main() {
+    window = mfb_open_ex("hi", 500, 500, WF_RESIZABLE);
+
     const int socket = OpenFlaschenTaschenSocket("10.20.4.57:1337");
     canvas = new UDPFlaschenTaschen(socket, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -69,6 +90,10 @@ int main() {
     MTRegisterContactFrameCallback(dev, callback);
     MTDeviceStart(dev, 0);
     printf("Ctrl-C to abort\n");
-    sleep(-1);
+
+    for (;;) {
+        mfb_update(window, highres);
+    }
+
     return 0;
 }
