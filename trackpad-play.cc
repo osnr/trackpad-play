@@ -53,14 +53,14 @@ int isInsideEllipse(float x0, float y0, float a, float b, float angle, float x, 
     float d = sin(angle) * (x - x0) - cos(angle) * (y - y0);
     return (c * c) / (a * a) + (d * d) / (b * b) <= 1;
 }
-void drawEllipse(float x0, float y0, float a, float b, float angle) {
+void drawEllipse(float x0, float y0, float a, float b, float angle, unsigned int color) {
     const float maxR = fmax(a, b) * 1.414;
     for (int x = (int) (x0 - maxR); x < (int) (x0 + maxR); x++) {
         for (int y = (int) (y0 - maxR); y < (int) (y0 + maxR); y++) {
             if (x >= 0 && x < SUPER_WIDTH && y >= 0 && y < SUPER_HEIGHT &&
                 isInsideEllipse(x0, y0, a, b, angle, x, y)) {
 
-                super[y][x] = MFB_RGB(255, 0, 0);
+                super[y][x] = color;
             }
         }
     }
@@ -87,7 +87,8 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
         //        f->size, f->unk2);
 
         drawEllipse(((f->normalized.pos.x) * SUPER_WIDTH), ((1.0f - f->normalized.pos.y) * SUPER_HEIGHT),
-                    (f->majorAxis * 2.5), (f->minorAxis * 2.5), f->angle);
+                    (f->majorAxis * 2.5), (f->minorAxis * 2.5), f->angle,
+                    MFB_RGB(255, 255, 255));
     }
     // printf("\n");
 
