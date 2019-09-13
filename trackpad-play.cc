@@ -95,6 +95,7 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
     }
     printf("\n");
 
+    memset(small, 0, DISPLAY_WIDTH*DISPLAY_HEIGHT*sizeof(int));
     float xScale = (float) DISPLAY_WIDTH / (float) SUPER_WIDTH;
     float yScale = (float) DISPLAY_HEIGHT / (float) SUPER_HEIGHT;
     for (int x = 0; x < SUPER_WIDTH; x++) {
@@ -104,12 +105,15 @@ int callback(int device, Finger *data, int nFingers, double timestamp, int frame
             }
         }
     }
-    // for (int y = 0; y < DISPLAY_HEIGHT; y++) {
-    //     for (int x = 0; x < DISPLAY_WIDTH; x++) {
-    //         printf("%02d ", small[x][y]);
-    //     }
-    //     printf("\n");
-    // }
+    float binSize = (float) (SUPER_WIDTH * SUPER_HEIGHT) / (float) (DISPLAY_WIDTH * DISPLAY_HEIGHT);
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            float level = (float) small[x][y] / binSize;
+            int value = 255 * level;
+            small[x][y] = MFB_RGB(value, value, value);
+        }
+        // printf("\n");
+    }
 
     return 0;
 }
